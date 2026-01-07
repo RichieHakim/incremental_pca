@@ -117,31 +117,37 @@ IncrementalPCA(
 
 ## Benchmarks
 
-Benchmarks comparing against `sklearn.decomposition.IncrementalPCA` on CPU.
+Benchmarks comparing against `sklearn.decomposition.IncrementalPCA` and `sklearn.decomposition.PCA` (Vanilla) on CPU.
 
 **Configuration**: 10,000 samples × 500 features → 50 components
 
 ### Fit Performance
 
-| Batch Size | Torch (s) | sklearn (s) | Speedup |
-|----------:|----------:|------------:|--------:|
-|        64 |     0.708 |       0.663 |    0.94x |
-|       128 |     0.581 |       0.579 |    1.00x |
-|       256 |     0.670 |       0.612 |    0.91x |
-|       512 |     0.699 |       0.633 |    0.91x |
-|      1024 |     0.585 |       0.548 |    0.94x |
-|      2048 |     0.535 |       0.480 |    0.90x |
+- **Vanilla PCA (sklearn)**: 0.128 s
+
+| Batch Size | Torch (s) | sklearn IPCA (s) | Speedup vs IPCA | Speedup vs PCA |
+|----------:|----------:|-----------------:|---------------:|---------------:|
+|        64 |     0.713 |            0.659 |          0.92x |          0.18x |
+|       128 |     0.561 |            0.560 |          1.00x |          0.23x |
+|       256 |     0.648 |            0.599 |          0.92x |          0.20x |
+|       512 |     0.687 |            0.610 |          0.89x |          0.19x |
+|      1024 |     0.568 |            0.527 |          0.93x |          0.23x |
+|      2048 |     0.471 |            0.442 |          0.94x |          0.27x |
 
 ### Transform Performance
 
-| Batch Size | Torch (s) | sklearn (s) | Speedup |
-|----------:|----------:|------------:|--------:|
-|        64 |     0.008 |       0.028 |    3.64x |
-|       512 |     0.011 |       0.028 |    2.47x |
-|      1024 |     0.007 |       0.028 |    3.72x |
-|      2048 |     0.013 |       0.028 |    2.08x |
+- **Vanilla PCA (sklearn)**: 0.023 s
 
-> **Note**: On CPU, performance is comparable to sklearn. The main advantage of this package is GPU acceleration, which provides significant speedups for large datasets.
+| Batch Size | Torch (s) | sklearn IPCA (s) | Speedup vs IPCA | Speedup vs PCA |
+|----------:|----------:|-----------------:|---------------:|---------------:|
+|        64 |     0.011 |            0.019 |          1.76x |          2.10x |
+|       128 |     0.068 |            0.019 |          0.28x |          0.34x |
+|       256 |     0.024 |            0.019 |          0.80x |          0.95x |
+|       512 |     0.007 |            0.019 |          2.60x |          3.10x |
+|      1024 |     0.007 |            0.019 |          2.67x |          3.18x |
+|      2048 |     0.018 |            0.019 |          1.06x |          1.26x |
+
+> **Note**: On CPU, incremental fitting is generally slower than full-batch randomized PCA when data fits in memory, due to the overhead of repeated SVDs. However, `incremental_pca_torch` enables processing datasets that **do not fit in memory** (or GPU memory), which is the primary use case. Transform speed varies by batch size but can be significantly faster than sklearn.
 
 ## Algorithm
 

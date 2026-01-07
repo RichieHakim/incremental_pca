@@ -17,6 +17,7 @@ import sys
 import numpy as np
 import torch
 from sklearn.decomposition import IncrementalPCA as SklearnIPCA
+from sklearn.decomposition import PCA as SklearnPCA
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
@@ -75,9 +76,16 @@ def benchmark_fit(
         "sklearn_mean_s": [],
         "sklearn_std_s": [],
         "speedup": [],
+        "vanilla_pca_mean_s": 0.0,
     }
     
     dtype = torch.float64 if device == "cpu" else torch.float32
+
+    # Benchmark Vanilla PCA once
+    print(f"  Benchmarking Vanilla PCA (sklearn)...")
+    sklearn_pca = SklearnPCA(n_components=n_components)
+    pca_mean, pca_std = time_function(lambda: sklearn_pca.fit(X), n_repeats)
+    results["vanilla_pca_mean_s"] = pca_mean
     
     for batch_size in batch_sizes:
         print(f"  Benchmarking fit with batch_size={batch_size}...")
@@ -127,6 +135,7 @@ def benchmark_transform(
         "sklearn_mean_s": [],
         "sklearn_std_s": [],
         "speedup": [],
+        "vanilla_pca_mean_s": 0.0,
     }
     
     dtype = torch.float64 if device == "cpu" else torch.float32
@@ -143,7 +152,15 @@ def benchmark_transform(
     
     sklearn_ipca = SklearnIPCA(n_components=n_components, batch_size=fit_batch_size)
     sklearn_ipca.fit(X)
+
+    sklearn_pca = SklearnPCA(n_components=n_components)
+    sklearn_pca.fit(X)
     
+    # Benchmark Vanilla PCA transform once
+    print(f"  Benchmarking Vanilla PCA transform (sklearn)...")
+    pca_mean, pca_std = time_function(lambda: sklearn_pca.transform(X), n_repeats)
+    results["vanilla_pca_mean_s"] = pca_mean
+
     for batch_size in batch_sizes:
         print(f"  Benchmarking transform with batch_size={batch_size}...")
         
@@ -181,16 +198,22 @@ def format_results_table(results: Dict) -> str:
     lines.append(f"- **Data shape**: ({results['n_samples']}, {results['n_features']})")
     lines.append(f"- **Components**: {results['n_components']}")
     lines.append(f"- **Device**: {results['device']}")
+    
+    vanilla_time = results.get("vanilla_pca_mean_s", 0.0)
+    lines.append(f"- **Vanilla PCA (sklearn)**: {vanilla_time:.3f} s")
+    
     lines.append("")
-    lines.append("| Batch Size | Torch (s) | sklearn (s) | Speedup |")
-    lines.append("|----------:|----------:|------------:|--------:|")
+    lines.append("| Batch Size | Torch (s) | sklearn IPCA (s) | Speedup vs IPCA | Speedup vs PCA |")
+    lines.append("|----------:|----------:|-----------------:|---------------:|---------------:|")
     
     for i, batch_size in enumerate(results["batch_sizes"]):
         torch_time = results["torch_mean_s"][i]
         sklearn_time = results["sklearn_mean_s"][i]
-        speedup = results["speedup"][i]
+        speedup_ipca = results["speedup"][i]
+        speedup_pca = vanilla_time / torch_time if torch_time > 0 else 0
+        
         lines.append(
-            f"| {batch_size:>9} | {torch_time:>9.3f} | {sklearn_time:>11.3f} | {speedup:>7.2f}x |"
+            f"| {batch_size:>9} | {torch_time:>9.3f} | {sklearn_time:>16.3f} | {speedup_ipca:>13.2f}x | {speedup_pca:>13.2f}x |"
         )
     
     return "\n".join(lines)
