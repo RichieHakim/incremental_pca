@@ -1,4 +1,4 @@
-# Incremental PCA for PyTorch
+# Incremental PCA for PyTorch (Fast PCA on GPUs!)
 
 [![PyPI version](https://badge.fury.io/py/incremental-pca-torch.svg)](https://badge.fury.io/py/incremental-pca-torch)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
