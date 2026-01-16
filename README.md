@@ -4,7 +4,7 @@
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Incremental Principal Component Analysis (PCA) using PyTorch: This package provides a scikit-learn compatible API for performing PCA. This allows for PCA to be performed on datasets that are too large to fit in memory.
+Incremental Principal Component Analysis (PCA) using PyTorch: This package provides a scikit-learn compatible API for performing normal PCA or incremental PCA. This allows for PCA to be performed on datasets that are too large to fit in memory.
 
 ## Features
 
